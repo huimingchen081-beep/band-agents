@@ -1,0 +1,393 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Band Agents - Multi-Agent Development Pipeline Demo</title>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body {
+  font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+  background: #0a0a1a;
+  color: #e0e0f0;
+  overflow: hidden;
+  width: 1280px;
+  height: 720px;
+}
+.container { 
+  width: 1280px; height: 720px; 
+  display: flex; flex-direction: column;
+  padding: 40px 60px;
+}
+.header {
+  text-align: center;
+  margin-bottom: 30px;
+}
+.header h1 {
+  font-size: 36px;
+  font-weight: 700;
+  background: linear-gradient(135deg, #6366f1, #a855f7, #ec4899);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  margin-bottom: 8px;
+}
+.header .subtitle {
+  font-size: 16px;
+  color: #8888aa;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+}
+
+/* Pipeline Flow */
+.pipeline {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  margin-bottom: 30px;
+}
+.agent-box {
+  background: #1a1a2e;
+  border: 2px solid #2a2a4e;
+  border-radius: 12px;
+  padding: 16px 24px;
+  text-align: center;
+  transition: all 0.4s ease;
+  min-width: 160px;
+}
+.agent-box .emoji { font-size: 28px; }
+.agent-box .name { 
+  font-size: 15px; 
+  font-weight: 600; 
+  margin: 6px 0 2px; 
+}
+.agent-box .role { 
+  font-size: 11px; 
+  color: #8888aa; 
+}
+.agent-box.active {
+  border-color: #6366f1;
+  background: #1e1e40;
+  box-shadow: 0 0 20px rgba(99,102,241,0.3);
+  transform: scale(1.05);
+}
+.agent-box.done {
+  border-color: #22c55e;
+  background: #0a2e1a;
+}
+.agent-box.done .name { color: #22c55e; }
+.arrow {
+  font-size: 20px;
+  color: #4a4a7e;
+}
+.arrow.active { color: #6366f1; }
+
+/* Content Area */
+.content-area {
+  flex: 1;
+  background: #111128;
+  border: 1px solid #2a2a4e;
+  border-radius: 12px;
+  padding: 24px 32px;
+  overflow-y: auto;
+  font-family: 'Cascadia Code', 'Fira Code', 'Consolas', monospace;
+  font-size: 12px;
+  line-height: 1.7;
+  position: relative;
+}
+.content-area h2 {
+  font-family: 'Segoe UI', system-ui, sans-serif;
+  font-size: 18px;
+  color: #6366f1;
+  margin-bottom: 12px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid #2a2a4e;
+}
+.content-area h3 {
+  font-family: 'Segoe UI', system-ui, sans-serif;
+  font-size: 14px;
+  color: #a855f7;
+  margin: 10px 0 6px;
+}
+.content-area strong { color: #f59e0b; }
+.content-area .highlight { color: #22c55e; }
+
+/* Stats bar */
+.stats {
+  display: flex;
+  justify-content: center;
+  gap: 40px;
+  margin-top: 20px;
+}
+.stat {
+  text-align: center;
+}
+.stat .value {
+  font-size: 24px;
+  font-weight: 700;
+  background: linear-gradient(135deg, #6366f1, #a855f7);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+.stat .label {
+  font-size: 12px;
+  color: #8888aa;
+  margin-top: 4px;
+}
+
+/* Animation */
+.fade-in {
+  animation: fadeIn 0.5s ease-in;
+}
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* Typing effect class */
+.typing::after {
+  content: '▊';
+  animation: blink 0.8s infinite;
+}
+@keyframes blink {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0; }
+}
+</style>
+</head>
+<body>
+<div class="container">
+  <div class="header">
+    <h1>🤖 Band Agents — Multi-Agent Development Pipeline</h1>
+    <div class="subtitle">Architect → Developer → Reviewer → QATest</div>
+  </div>
+
+  <div class="pipeline" id="pipeline">
+    <div class="agent-box" id="box-architect">
+      <div class="emoji">🏗️</div>
+      <div class="name">Architect</div>
+      <div class="role">System Design</div>
+    </div>
+    <div class="arrow" id="arrow1">→</div>
+    <div class="agent-box" id="box-developer">
+      <div class="emoji">💻</div>
+      <div class="name">Developer</div>
+      <div class="role">Code Generation</div>
+    </div>
+    <div class="arrow" id="arrow2">→</div>
+    <div class="agent-box" id="box-reviewer">
+      <div class="emoji">🔍</div>
+      <div class="name">Reviewer</div>
+      <div class="role">Code Review</div>
+    </div>
+    <div class="arrow" id="arrow3">→</div>
+    <div class="agent-box" id="box-qatest">
+      <div class="emoji">🧪</div>
+      <div class="name">QATest</div>
+      <div class="role">Test Generation</div>
+    </div>
+  </div>
+
+  <div class="content-area" id="content">
+    <h2>📋 Project Request</h2>
+    <p style="color:#a0a0c0; font-size:14px; line-height:1.8;">
+      Build a <strong>URL Shortener Service</strong> with <strong>Express.js + TypeScript + SQLite</strong>.<br>
+      Features: URL shortening, redirect with analytics tracking, stats endpoint, input validation.
+    </p>
+    <p style="color:#888; margin-top:12px; font-style:italic;">Waiting for Architect agent to analyze requirements...</p>
+  </div>
+
+  <div class="stats">
+    <div class="stat"><div class="value">4</div><div class="label">AI Agents</div></div>
+    <div class="stat"><div class="value">476s</div><div class="label">Pipeline Time</div></div>
+    <div class="stat"><div class="value">46K</div><div class="label">Total Output</div></div>
+    <div class="stat"><div class="value">7/10</div><div class="label">Review Score</div></div>
+  </div>
+</div>
+
+<script>
+// Demo replay script
+const STAGES = [
+  {
+    time: 0,
+    agents: { architect: 'active' },
+    arrows: {},
+    title: '🏗️ Architect — System Design',
+    content: `<h2>🏗️ Architect — System Design Phase</h2>
+<h3>📋 Analyzing Requirements...</h3>
+<p style="color:#a0a0c0; font-size:13px; line-height:1.8;">
+<strong>Project:</strong> URL Shortener Service<br>
+<strong>Stack:</strong> Express.js + TypeScript + SQLite + Knex<br>
+<strong>Key Components:</strong> URL Controller → URL Service → Database Layer<br>
+<strong>API Endpoints:</strong> POST /api/shorten, GET /:shortCode, GET /api/stats/:shortCode<br>
+<strong>Database:</strong> urls table (id, original_url, short_code, created_at, click_count)<br>
+<strong>Architecture:</strong> MVC pattern with middleware for validation & error handling
+</p>`
+  },
+  {
+    time: 4,
+    agents: { architect: 'done', developer: 'active' },
+    arrows: { arrow1: 'active' },
+    title: '💻 Developer — Code Generation',
+    content: `<h2>💻 Developer — Writing Production Code</h2>
+<h3>📁 Project Structure</h3>
+<pre style="color:#22c55e; font-size:11px;">
+src/
+├── controllers/url.controller.ts    # Request handling
+├── services/url.service.ts          # Business logic
+├── middleware/validation.ts         # Zod validation
+├── database/
+│   ├── connection.ts                # SQLite + Knex
+│   └── migrations/                  # Schema migrations
+├── types/                           # TypeScript interfaces
+└── app.ts                           # Express app setup
+</pre>
+<h3 style="margin-top:10px;">🔑 Key Implementation Details</h3>
+<p style="color:#a0a0c0; font-size:12px;">
+• nanoid-based short code generation (8 chars)<br>
+• Zod schema validation for all inputs<br>
+• IP hashing for privacy-conscious analytics<br>
+• Knex migrations for version-controlled schema<br>
+• Singleton service pattern for dependency management
+</p>`
+  },
+  {
+    time: 8,
+    agents: { architect: 'done', developer: 'done', reviewer: 'active' },
+    arrows: { arrow1: 'active', arrow2: 'active' },
+    title: '🔍 Reviewer — Code Review',
+    content: `<h2>🔍 Reviewer — Multi-Dimensional Code Review</h2>
+<h3>📊 Overall Score: <span style="color:#f59e0b;">7/10</span></h3>
+<table style="width:100%; font-size:12px; margin:10px 0; color:#a0a0c0;">
+<tr><td>Code Quality</td><td style="color:#22c55e;">8/10</td><td>Clean TS, good separation</td></tr>
+<tr><td>Security</td><td style="color:#f59e0b;">6/10</td><td>Missing auth, open redirect</td></tr>
+<tr><td>Performance</td><td style="color:#22c55e;">7/10</td><td>Good caching potential</td></tr>
+<tr><td>Architecture</td><td style="color:#22c55e;">8/10</td><td>Well-aligned MVC pattern</td></tr>
+</table>
+<h3>✅ What's Working Well</h3>
+<p style="color:#22c55e; font-size:12px;">
+✓ Clean separation of concerns (Controllers/Services/Middleware)<br>
+✓ Zod validation provides runtime + type safety<br>
+✓ Privacy-conscious IP hashing for analytics<br>
+✓ Knex migrations for version-controlled schema<br>
+✓ Fire-and-forget analytics design for performance
+</p>
+<h3>⚠️ Issues Found</h3>
+<p style="color:#f59e0b; font-size:12px;">
+🔴 <strong>Critical:</strong> Analytics not tracking on redirect — click_count never increments<br>
+🟡 <strong>Warning:</strong> Missing authentication on /api/stats endpoint<br>
+🟡 <strong>Warning:</strong> Open redirect vulnerability — no URL validation<br>
+🔵 <strong>Suggestion:</strong> Add rate limiting for /api/shorten endpoint
+</p>
+<p style="color:#6366f1; font-size:12px; margin-top:8px;">
+<strong>Verdict:</strong> ⚠️ APPROVED WITH SUGGESTIONS — Fix critical analytics bug before production
+</p>`
+  },
+  {
+    time: 12,
+    agents: { architect: 'done', developer: 'done', reviewer: 'done', qatest: 'active' },
+    arrows: { arrow1: 'active', arrow2: 'active', arrow3: 'active' },
+    title: '🧪 QATest — Test Generation',
+    content: `<h2>🧪 QATest — Comprehensive Test Suite</h2>
+<h3>📝 Test Strategy: pytest + supertest + jest</h3>
+<pre style="color:#a0a0c0; font-size:11px;">
+Test Plan:
+├── Unit Tests (15 cases)
+│   ├── URL service: shorten, redirect, analytics
+│   ├── Validation middleware: Zod schema tests
+│   └── Utility functions: nanoid, IP hashing
+├── Integration Tests (10 cases)
+│   ├── POST /api/shorten — happy path + edge cases
+│   ├── GET /:shortCode — redirect + 404
+│   └── GET /api/stats/:shortCode — analytics
+└── Edge Cases (8 cases)
+    ├── Invalid URLs (no protocol, malformed)
+    ├── Extremely long URLs (4096+ chars)
+    ├── Concurrent shorten requests
+    └── Non-existent short code lookup
+</pre>
+<h3 style="margin-top:10px;">🎯 Test Coverage</h3>
+<p style="color:#22c55e; font-size:12px;">
+• 33 total test cases generated<br>
+• Covers happy path, error handling, and edge cases<br>
+• Uses <strong>@pytest.mark.xfail</strong> for known bugs<br>
+• CI-ready with npm test integration<br>
+• Test fixtures for predictable test data
+</p>`
+  },
+  {
+    time: 16,
+    agents: { architect: 'done', developer: 'done', reviewer: 'done', qatest: 'done' },
+    arrows: { arrow1: 'active', arrow2: 'active', arrow3: 'active' },
+    title: '✅ Pipeline Complete',
+    content: `<h2>✅ Pipeline Complete — All 4 Agents Finished</h2>
+<h3>📊 Final Summary</h3>
+<table style="width:100%; font-size:13px; margin:10px 0; color:#a0a0c0;">
+<tr><td>🏗️ Architect</td><td style="color:#22c55e;">✅ 7,695 chars</td><td>System design & API spec</td></tr>
+<tr><td>💻 Developer</td><td style="color:#22c55e;">✅ 12,724 chars</td><td>Production Express.js code</td></tr>
+<tr><td>🔍 Reviewer</td><td style="color:#22c55e;">✅ 10,860 chars</td><td>Multi-dimension review (7/10)</td></tr>
+<tr><td>🧪 QATest</td><td style="color:#22c55e;">✅ 15,610 chars</td><td>33 test cases generated</td></tr>
+</table>
+<h3 style="margin-top:12px;">⚡ Pipeline Stats</h3>
+<p style="color:#a0a0c0; font-size:13px;">
+<strong>Total Time:</strong> <span style="color:#6366f1;">476.6s</span> (7.9 minutes)<br>
+<strong>Total Output:</strong> <span style="color:#6366f1;">46,889 chars</span><br>
+<strong>LLM Model:</strong> <span style="color:#a855f7;">qwen3.7-plus</span> (DashScope)<br>
+<strong>Architecture:</strong> Flask + SSE real-time progress<br>
+<strong>Platform:</strong> Band.ai + lablab.ai Hackathon
+</p>
+<div style="text-align:center; margin-top:20px; padding:16px; background:#1a1a2e; border-radius:8px; border:1px solid #6366f1;">
+<p style="font-size:18px; color:#6366f1;">🚀 <strong>Band Agents</strong> — Automating the full software development lifecycle with AI</p>
+<p style="font-size:12px; color:#888;">github.com/huimingchen081-beep/band-agents | band.ai</p>
+</div>`
+  }
+];
+
+let currentStage = 0;
+let startTime = Date.now();
+
+function updateUI() {
+  const elapsed = (Date.now() - startTime) / 1000;
+  
+  // Find current stage
+  let stage = STAGES[0];
+  for (let i = STAGES.length - 1; i >= 0; i--) {
+    if (elapsed >= STAGES[i].time) {
+      stage = STAGES[i];
+      break;
+    }
+  }
+  
+  // Update pipeline boxes
+  ['architect', 'developer', 'reviewer', 'qatest'].forEach(agent => {
+    const box = document.getElementById('box-' + agent);
+    const state = stage.agents[agent] || '';
+    box.className = 'agent-box';
+    if (state === 'active') box.className = 'agent-box active';
+    if (state === 'done') box.className = 'agent-box done';
+  });
+  
+  // Update arrows
+  ['arrow1', 'arrow2', 'arrow3'].forEach(id => {
+    const el = document.getElementById(id);
+    el.className = 'arrow';
+    if (stage.arrows[id]) el.className = 'arrow active';
+  });
+  
+  // Update content with fade
+  const content = document.getElementById('content');
+  content.innerHTML = stage.content;
+  content.className = 'content-area fade-in';
+}
+
+// Run the demo loop
+setInterval(updateUI, 200);
+updateUI();
+
+// Loop the demo
+setInterval(() => {
+  startTime = Date.now();
+}, 22000);
+</script>
+</body>
+</html>

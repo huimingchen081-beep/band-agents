@@ -1,0 +1,674 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Band Agents — AI Software Development Team</title>
+<style>
+/* ─── Reset & Base ────────────────────────────────── */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+:root {
+  --bg: #0a0a0f;
+  --surface: #14141f;
+  --surface2: #1a1a2a;
+  --border: #2a2a3a;
+  --text: #e0e0f0;
+  --text2: #8888aa;
+  --accent: #6366f1;
+  --accent2: #818cf8;
+  --green: #22c55e;
+  --red: #ef4444;
+  --yellow: #eab308;
+  --cyan: #06b6d4;
+  --orange: #f97316;
+  --architect: #6366f1;
+  --developer: #22c55e;
+  --reviewer: #f97316;
+  --qatest: #06b6d4;
+  --radius: 12px;
+  --radius-sm: 8px;
+  --shadow: 0 4px 24px rgba(0,0,0,.4);
+  --transition: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  --font: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+  --mono: 'JetBrains Mono', 'Fira Code', 'Cascadia Code', 'Consolas', monospace;
+}
+html { font-size: 16px; scroll-behavior: smooth; }
+body {
+  font-family: var(--font);
+  background: var(--bg);
+  color: var(--text);
+  min-height: 100vh;
+  line-height: 1.6;
+  overflow-x: hidden;
+}
+a { color: var(--accent2); text-decoration: none; }
+
+/* ─── Background Animation ────────────────────────── */
+.bg-grid {
+  position: fixed; inset: 0; z-index: 0; pointer-events: none;
+  background-image:
+    linear-gradient(rgba(99,102,241,.03) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(99,102,241,.03) 1px, transparent 1px);
+  background-size: 60px 60px;
+}
+.bg-glow {
+  position: fixed; z-index: 0; pointer-events: none;
+  width: 600px; height: 600px;
+  border-radius: 50%;
+  filter: blur(150px);
+  opacity: 0.15;
+}
+.bg-glow.top { top: -200px; right: -100px; background: var(--accent); }
+.bg-glow.bottom { bottom: -200px; left: -100px; background: var(--cyan); }
+
+/* ─── Layout ──────────────────────────────────────── */
+.container {
+  position: relative; z-index: 1;
+  max-width: 1100px; margin: 0 auto; padding: 2rem 1.5rem;
+}
+header {
+  text-align: center; padding: 3rem 0 2rem;
+}
+header h1 {
+  font-size: 2.8rem; font-weight: 800; letter-spacing: -0.03em;
+  background: linear-gradient(135deg, var(--accent2), var(--cyan), var(--accent2));
+  -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+  background-clip: text;
+  margin-bottom: .5rem;
+}
+header p {
+  font-size: 1.15rem; color: var(--text2);
+  max-width: 600px; margin: 0 auto;
+}
+.badge {
+  display: inline-flex; align-items: center; gap: .4rem;
+  padding: .35rem .8rem; border-radius: 999px;
+  font-size: .8rem; font-weight: 600;
+  background: var(--surface2); border: 1px solid var(--border);
+  color: var(--text2); margin: .25rem;
+}
+.badge.dot { position: relative; padding-left: 1.6rem; }
+.badge.dot::before {
+  content: ''; position: absolute; left: .6rem; top: 50%; transform: translateY(-50%);
+  width: 8px; height: 8px; border-radius: 50%;
+}
+.badge.dot.online::before { background: var(--green); }
+.badge.dot.offline::before { background: var(--text2); }
+
+/* ─── Agent Pipeline Visualization ────────────────── */
+.pipeline-section { margin: 2rem 0 3rem; }
+.pipeline-title {
+  font-size: 1.4rem; font-weight: 700; margin-bottom: 1.5rem;
+  display: flex; align-items: center; gap: .5rem;
+}
+.pipeline {
+  display: flex; align-items: center; justify-content: center;
+  gap: 0; flex-wrap: wrap; margin: 2rem 0;
+}
+.agent-node {
+  position: relative;
+  display: flex; flex-direction: column; align-items: center;
+  gap: .6rem; padding: 1.2rem;
+}
+.agent-icon {
+  width: 64px; height: 64px; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 1.6rem; background: var(--surface2);
+  border: 3px solid var(--border);
+  transition: var(--transition); position: relative;
+}
+.agent-icon.active {
+  border-color: var(--accent);
+  box-shadow: 0 0 20px rgba(99,102,241,.4);
+  animation: pulse 2s ease-in-out infinite;
+}
+.agent-icon.done {
+  border-color: var(--green);
+  box-shadow: 0 0 16px rgba(34,197,94,.3);
+  background: rgba(34,197,94,.1);
+}
+.agent-icon.architect { border-color: var(--architect); }
+.agent-icon.architect.done { background: rgba(99,102,241,.15); }
+.agent-icon.developer { border-color: var(--developer); }
+.agent-icon.developer.done { background: rgba(34,197,94,.15); }
+.agent-icon.reviewer { border-color: var(--reviewer); }
+.agent-icon.reviewer.done { background: rgba(249,115,22,.15); }
+.agent-icon.qatest { border-color: var(--qatest); }
+.agent-icon.qatest.done { background: rgba(6,182,212,.15); }
+
+@keyframes pulse {
+  0%, 100% { box-shadow: 0 0 20px rgba(99,102,241,.4); }
+  50% { box-shadow: 0 0 40px rgba(99,102,241,.7); }
+}
+.agent-label {
+  font-size: .85rem; font-weight: 600; text-align: center;
+  color: var(--text2); transition: var(--transition);
+}
+.agent-label.active { color: var(--text); }
+.agent-handle {
+  font-size: .7rem; color: var(--text2); text-align: center;
+  font-family: var(--mono); opacity: .7;
+}
+.agent-arrow {
+  font-size: 1.5rem; color: var(--text2); flex-shrink: 0;
+  margin: 0 -.5rem;
+}
+.agent-status-text {
+  font-size: .7rem; font-weight: 600; text-transform: uppercase;
+  letter-spacing: .05em;
+}
+.agent-status-text.idle { color: var(--text2); }
+.agent-status-text.running { color: var(--accent2); animation: blink 1s infinite; }
+.agent-status-text.done { color: var(--green); }
+@keyframes blink { 50% { opacity: 0.4; } }
+
+/* ─── Input Section ───────────────────────────────── */
+.input-section {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: var(--radius); padding: 2rem;
+  box-shadow: var(--shadow); margin-bottom: 2rem;
+}
+.input-section h2 {
+  font-size: 1.3rem; font-weight: 700; margin-bottom: 1rem;
+}
+textarea {
+  width: 100%; min-height: 120px; padding: 1rem;
+  border: 1px solid var(--border); border-radius: var(--radius-sm);
+  background: var(--surface2); color: var(--text);
+  font-family: var(--font); font-size: .95rem; resize: vertical;
+  transition: var(--transition);
+}
+textarea:focus {
+  outline: none; border-color: var(--accent);
+  box-shadow: 0 0 0 3px rgba(99,102,241,.15);
+}
+textarea::placeholder { color: var(--text2); opacity: .6; }
+.btn-row { display: flex; gap: 1rem; margin-top: 1rem; }
+.btn {
+  display: inline-flex; align-items: center; gap: .5rem;
+  padding: .75rem 1.5rem; border: none; border-radius: var(--radius-sm);
+  font-size: .95rem; font-weight: 600; cursor: pointer;
+  transition: var(--transition); font-family: var(--font);
+}
+.btn.primary {
+  background: var(--accent); color: #fff;
+  box-shadow: 0 4px 12px rgba(99,102,241,.3);
+}
+.btn.primary:hover {
+  background: var(--accent2); transform: translateY(-1px);
+  box-shadow: 0 6px 20px rgba(99,102,241,.4);
+}
+.btn.primary:disabled {
+  opacity: .5; cursor: not-allowed; transform: none;
+  box-shadow: none;
+}
+.btn.secondary {
+  background: var(--surface2); color: var(--text);
+  border: 1px solid var(--border);
+}
+.btn.secondary:hover {
+  border-color: var(--text2); background: var(--surface);
+}
+
+/* ─── Example Cards ───────────────────────────────── */
+.examples { display: flex; gap: .75rem; flex-wrap: wrap; margin-top: 1rem; }
+.example-chip {
+  padding: .4rem .75rem; border-radius: 999px;
+  font-size: .8rem; cursor: pointer;
+  background: var(--surface2); border: 1px solid var(--border);
+  color: var(--text2); transition: var(--transition);
+  white-space: nowrap;
+}
+.example-chip:hover {
+  border-color: var(--accent); color: var(--accent2);
+}
+
+/* ─── Output Section ──────────────────────────────── */
+.output-section { margin-top: 2rem; display: none; }
+.output-section.visible { display: block; }
+
+.progress-bar-wrap {
+  background: var(--surface2); border-radius: 999px;
+  height: 6px; margin-bottom: 2rem; overflow: hidden;
+}
+.progress-bar {
+  height: 100%; background: linear-gradient(90deg, var(--accent), var(--cyan));
+  border-radius: 999px; transition: width .5s ease;
+  width: 0%;
+}
+
+.tab-nav {
+  display: flex; gap: .25rem; margin-bottom: 1rem;
+  border-bottom: 2px solid var(--border); padding-bottom: 0;
+}
+.tab-btn {
+  padding: .6rem 1.2rem; border: none; background: none;
+  color: var(--text2); font-size: .9rem; font-weight: 600;
+  cursor: pointer; transition: var(--transition);
+  font-family: var(--font); position: relative;
+}
+.tab-btn:hover { color: var(--text); }
+.tab-btn.active {
+  color: var(--accent2);
+}
+.tab-btn.active::after {
+  content: ''; position: absolute; bottom: -2px; left: 0; right: 0;
+  height: 2px; background: var(--accent2); border-radius: 2px;
+}
+
+.tab-content { display: none; }
+.tab-content.active { display: block; }
+
+.code-block {
+  background: var(--surface2); border: 1px solid var(--border);
+  border-radius: var(--radius-sm); padding: 1.5rem;
+  overflow-x: auto; max-height: 600px;
+  overflow-y: auto; font-family: var(--mono); font-size: .85rem;
+  line-height: 1.7; white-space: pre-wrap; word-break: break-word;
+  color: var(--text);
+}
+.code-block::-webkit-scrollbar { width: 6px; }
+.code-block::-webkit-scrollbar-track { background: transparent; }
+.code-block::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+
+/* Review verdict colors */
+.verdict-approved { color: var(--green); font-weight: 700; }
+.verdict-warning { color: var(--yellow); font-weight: 700; }
+.verdict-rejected { color: var(--red); font-weight: 700; }
+
+/* ─── Stats Row ───────────────────────────────────── */
+.stats-row {
+  display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 1rem; margin: 2rem 0;
+}
+.stat-card {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: var(--radius); padding: 1.2rem;
+  text-align: center;
+}
+.stat-value {
+  font-size: 1.8rem; font-weight: 800;
+  background: linear-gradient(135deg, var(--accent2), var(--cyan));
+  -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+.stat-label { font-size: .8rem; color: var(--text2); margin-top: .25rem; }
+
+/* ─── Footer ──────────────────────────────────────── */
+footer {
+  text-align: center; padding: 2rem; color: var(--text2);
+  font-size: .8rem; border-top: 1px solid var(--border);
+  margin-top: 3rem;
+}
+
+/* ─── Responsive ──────────────────────────────────── */
+@media (max-width: 768px) {
+  .container { padding: 1rem; }
+  header h1 { font-size: 1.8rem; }
+  .pipeline { gap: .5rem; }
+  .agent-node { padding: .8rem; }
+  .agent-icon { width: 48px; height: 48px; font-size: 1.2rem; }
+  .agent-arrow { font-size: 1rem; }
+  .tab-btn { padding: .5rem .8rem; font-size: .8rem; }
+  .stats-row { grid-template-columns: 1fr 1fr; }
+}
+</style>
+</head>
+<body>
+<div class="bg-grid"></div>
+<div class="bg-glow top"></div>
+<div class="bg-glow bottom"></div>
+
+<div class="container">
+  <!-- Header -->
+  <header>
+    <h1>Band Agents</h1>
+    <p>AI-Powered Multi-Agent Software Development Team — Architect, Developer, Reviewer & QATest working together on the Band Platform</p>
+    <div style="margin-top:1rem;">
+      <span class="badge dot online">Architect</span>
+      <span class="badge dot online">Developer</span>
+      <span class="badge dot online">Reviewer</span>
+      <span class="badge dot online">QATest</span>
+      <span class="badge">Band SDK v1.0</span>
+      <span class="badge">Qwen 3.7 Plus</span>
+    </div>
+  </header>
+
+  <!-- Agent Pipeline -->
+  <section class="pipeline-section">
+    <div class="pipeline-title">🤖 Agent Collaboration Pipeline</div>
+    <div class="pipeline">
+      <!-- Architect -->
+      <div class="agent-node" id="node-architect">
+        <div class="agent-icon architect" id="icon-architect">🏗️</div>
+        <div class="agent-label" id="label-architect">Architect</div>
+        <div class="agent-handle">@huimingchen081/architect</div>
+        <div class="agent-status-text idle" id="status-architect">IDLE</div>
+      </div>
+      <div class="agent-arrow">→</div>
+      <!-- Developer -->
+      <div class="agent-node" id="node-developer">
+        <div class="agent-icon developer" id="icon-developer">💻</div>
+        <div class="agent-label" id="label-developer">Developer</div>
+        <div class="agent-handle">@huimingchen081/developer</div>
+        <div class="agent-status-text idle" id="status-developer">IDLE</div>
+      </div>
+      <div class="agent-arrow">→</div>
+      <!-- Reviewer -->
+      <div class="agent-node" id="node-reviewer">
+        <div class="agent-icon reviewer" id="icon-reviewer">🔍</div>
+        <div class="agent-label" id="label-reviewer">Reviewer</div>
+        <div class="agent-handle">@huimingchen081/reviewer</div>
+        <div class="agent-status-text idle" id="status-reviewer">IDLE</div>
+      </div>
+      <div class="agent-arrow">→</div>
+      <!-- QATest -->
+      <div class="agent-node" id="node-qatest">
+        <div class="agent-icon qatest" id="icon-qatest">🧪</div>
+        <div class="agent-label" id="label-qatest">QATest</div>
+        <div class="agent-handle">@huimingchen081/qatest</div>
+        <div class="agent-status-text idle" id="status-qatest">IDLE</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Input -->
+  <section class="input-section">
+    <h2>🚀 Describe Your Project</h2>
+    <p style="color:var(--text2);margin-bottom:1rem;font-size:.9rem;">
+      Our AI agent team will design the architecture, write production code, review for quality, and generate tests — all autonomously.
+    </p>
+    <textarea id="projectInput" placeholder="e.g. Build a RESTful todo API with user authentication, PostgreSQL backend, and rate limiting. Include proper error handling and API documentation.">Build a RESTful URL shortener service with:
+- Fast redirects (< 50ms)
+- Custom short codes
+- Click analytics (geo, device, referrer)
+- Rate limiting (100 req/min per IP)
+- REST API with JWT auth
+- PostgreSQL for storage
+- Redis for caching
+- Docker deployment</textarea>
+    <div class="examples">
+      <span class="example-chip" onclick="setExample(this)">📋 Todo API</span>
+      <span class="example-chip" onclick="setExample(this)">💬 Chat App Backend</span>
+      <span class="example-chip" onclick="setExample(this)">📊 Analytics Dashboard</span>
+      <span class="example-chip" onclick="setExample(this)">🔐 Auth Microservice</span>
+      <span class="example-chip" onclick="setExample(this)">🛒 E-commerce API</span>
+    </div>
+    <div class="btn-row">
+      <button class="btn primary" id="btnGenerate" onclick="startGeneration()">
+        ⚡ Generate Now
+      </button>
+      <button class="btn secondary" onclick="clearAll()">
+        🗑️ Clear
+      </button>
+    </div>
+  </section>
+
+  <!-- Output -->
+  <section class="output-section" id="outputSection">
+    <div class="progress-bar-wrap">
+      <div class="progress-bar" id="progressBar"></div>
+    </div>
+
+    <div class="tab-nav" id="tabNav">
+      <button class="tab-btn active" data-tab="architect">🏗️ Architecture</button>
+      <button class="tab-btn" data-tab="developer">💻 Code</button>
+      <button class="tab-btn" data-tab="reviewer">🔍 Review</button>
+      <button class="tab-btn" data-tab="qatest">🧪 Tests</button>
+    </div>
+
+    <div class="tab-content active" id="tab-architect">
+      <div class="code-block" id="output-architect">Waiting for Architect agent...</div>
+    </div>
+    <div class="tab-content" id="tab-developer">
+      <div class="code-block" id="output-developer">Waiting for Developer agent...</div>
+    </div>
+    <div class="tab-content" id="tab-reviewer">
+      <div class="code-block" id="output-reviewer">Waiting for Reviewer agent...</div>
+    </div>
+    <div class="tab-content" id="tab-qatest">
+      <div class="code-block" id="output-qatest">Waiting for QATest agent...</div>
+    </div>
+
+    <!-- Stats -->
+    <div class="stats-row" id="statsRow" style="display:none;">
+      <div class="stat-card">
+        <div class="stat-value" id="statTime">--</div>
+        <div class="stat-label">Total Pipeline Time</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-value" id="statAgents">4</div>
+        <div class="stat-label">AI Agents Deployed</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-value" id="statLines">--</div>
+        <div class="stat-label">Lines Generated</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-value" id="statStatus">--</div>
+        <div class="stat-label">Status</div>
+      </div>
+    </div>
+  </section>
+
+  <footer>
+    <p>Band Agents Hackathon 2026 · Built with Band SDK + DashScope AI · lablab.ai</p>
+  </footer>
+</div>
+
+<script>
+// ─── State ──────────────────────────────────────────
+const EXAMPLES = {
+  '📋 Todo API': 'Build a RESTful Todo API with:\n- CRUD endpoints for tasks\n- User authentication with JWT\n- PostgreSQL database\n- Input validation and sanitization\n- Pagination and filtering\n- API documentation with OpenAPI/Swagger\n- Unit and integration tests',
+  '💬 Chat App Backend': 'Build a real-time chat application backend with:\n- WebSocket connections for real-time messaging\n- Room/channel management\n- Message persistence in PostgreSQL\n- User presence tracking\n- Message history with pagination\n- File/attachment upload support\n- Rate limiting and spam protection',
+  '📊 Analytics Dashboard': 'Build a real-time analytics dashboard backend with:\n- Event tracking API\n- Time-series data aggregation\n- Redis caching layer\n- Dashboard data API with filters\n- Export to CSV/JSON\n- Role-based access control\n- Scheduled report generation',
+  '🔐 Auth Microservice': 'Build an authentication microservice with:\n- Email/password + OAuth2 (Google, GitHub)\n- JWT access + refresh tokens\n- Session management\n- Password reset flow\n- Email verification\n- Rate limiting on login attempts\n- Audit logging',
+  '🛒 E-commerce API': 'Build an e-commerce backend API with:\n- Product catalog with search & filters\n- Shopping cart with Redis\n- Order processing pipeline\n- Payment gateway integration (Stripe)\n- Inventory management\n- Customer profiles\n- Order history and tracking',
+};
+
+let taskId = null;
+let pollInterval = null;
+
+// ─── Tab Navigation ─────────────────────────────────
+document.getElementById('tabNav').addEventListener('click', (e) => {
+  if (!e.target.classList.contains('tab-btn')) return;
+  const tab = e.target.dataset.tab;
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+  e.target.classList.add('active');
+  document.getElementById(`tab-${tab}`).classList.add('active');
+});
+
+// ─── Example Chips ──────────────────────────────────
+function setExample(chip) {
+  const key = chip.textContent.trim();
+  if (EXAMPLES[key]) {
+    document.getElementById('projectInput').value = EXAMPLES[key];
+  }
+}
+
+// ─── Agent Status Updates ───────────────────────────
+function updateAgentUI(agentKey, status) {
+  const icon = document.getElementById(`icon-${agentKey}`);
+  const label = document.getElementById(`label-${agentKey}`);
+  const statusEl = document.getElementById(`status-${agentKey}`);
+
+  // Remove old classes
+  icon.classList.remove('active', 'done', agentKey);
+  label.classList.remove('active');
+  statusEl.classList.remove('idle', 'running', 'done');
+
+  if (status === 'running') {
+    icon.classList.add('active', agentKey);
+    label.classList.add('active');
+    statusEl.textContent = 'RUNNING';
+    statusEl.classList.add('running');
+  } else if (status === 'completed') {
+    icon.classList.add('done', agentKey);
+    statusEl.textContent = 'DONE';
+    statusEl.classList.add('done');
+  } else {
+    icon.classList.add(agentKey);
+    statusEl.textContent = 'IDLE';
+    statusEl.classList.add('idle');
+  }
+}
+
+// ─── Progress Bar ───────────────────────────────────
+function updateProgress(progress) {
+  const keys = ['architect', 'developer', 'reviewer', 'qatest'];
+  let completed = 0;
+  keys.forEach(k => {
+    if (progress[k]?.status === 'completed') completed++;
+    if (progress[k]?.status === 'running') updateAgentUI(k, 'running');
+    if (progress[k]?.status === 'completed') updateAgentUI(k, 'completed');
+  });
+  document.getElementById('progressBar').style.width = `${(completed / 4) * 100}%`;
+}
+
+// ─── Start Generation ───────────────────────────────
+async function startGeneration() {
+  const input = document.getElementById('projectInput').value.trim();
+  if (input.length < 10) {
+    alert('Please enter a project description (at least 10 characters).');
+    return;
+  }
+
+  // Reset UI
+  const keys = ['architect', 'developer', 'reviewer', 'qatest'];
+  keys.forEach(k => {
+    updateAgentUI(k, 'idle');
+    document.getElementById(`output-${k}`).textContent = `Waiting for ${k} agent...`;
+  });
+  document.getElementById('progressBar').style.width = '0%';
+  document.getElementById('outputSection').classList.add('visible');
+  document.getElementById('statsRow').style.display = 'none';
+  document.getElementById('btnGenerate').disabled = true;
+  document.getElementById('btnGenerate').textContent = '⏳ Generating...';
+
+  try {
+    // Start pipeline
+    const resp = await fetch('/api/generate', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ description: input }),
+    });
+    const data = await resp.json();
+    if (data.error) { alert(data.error); resetBtn(); return; }
+
+    taskId = data.task_id;
+    startPolling();
+  } catch (e) {
+    alert('Failed to connect to server. Make sure the server is running.');
+    resetBtn();
+  }
+}
+
+// ─── Polling ────────────────────────────────────────
+function startPolling() {
+  if (pollInterval) clearInterval(pollInterval);
+
+  pollInterval = setInterval(async () => {
+    if (!taskId) return;
+
+    try {
+      const resp = await fetch(`/api/task/${taskId}`);
+      const data = await resp.json();
+      if (!data || data.error) return;
+
+      updateProgress(data.progress || {});
+
+      if (data.status === 'completed' && data.has_result) {
+        clearInterval(pollInterval);
+        await loadResults();
+        resetBtn();
+      }
+
+      if (data.status === 'failed') {
+        clearInterval(pollInterval);
+        alert(`Pipeline failed: ${data.error || 'Unknown error'}`);
+        resetBtn();
+      }
+    } catch (e) {
+      console.error('Poll error:', e);
+    }
+  }, 1000);
+}
+
+// ─── Load Results ───────────────────────────────────
+async function loadResults() {
+  try {
+    const resp = await fetch(`/api/task/${taskId}/result`);
+    const data = await resp.json();
+
+    // Display each agent's output
+    if (data.architect) {
+      document.getElementById('output-architect').textContent = data.architect.output || 'No output';
+    }
+    if (data.developer) {
+      document.getElementById('output-developer').textContent = data.developer.output || 'No output';
+    }
+    if (data.reviewer) {
+      document.getElementById('output-reviewer').textContent = data.reviewer.output || 'No output';
+    }
+    if (data.qatest) {
+      document.getElementById('output-qatest').textContent = data.qatest.output || 'No output';
+    }
+
+    // Stats
+    document.getElementById('statTime').textContent = `${data.total_time?.toFixed(1) || '--'}s`;
+    document.getElementById('statStatus').textContent = '✅ Complete';
+
+    // Count approximate lines
+    let totalLines = 0;
+    ['architect', 'developer', 'reviewer', 'qatest'].forEach(k => {
+      if (data[k]?.output) {
+        totalLines += data[k].output.split('\n').length;
+      }
+    });
+    document.getElementById('statLines').textContent = totalLines.toLocaleString();
+
+    document.getElementById('statsRow').style.display = 'grid';
+
+  } catch (e) {
+    console.error('Failed to load results:', e);
+  }
+}
+
+// ─── Clear ──────────────────────────────────────────
+function clearAll() {
+  document.getElementById('projectInput').value = '';
+  document.getElementById('outputSection').classList.remove('visible');
+  document.getElementById('statsRow').style.display = 'none';
+  taskId = null;
+  if (pollInterval) clearInterval(pollInterval);
+  resetBtn();
+
+  const keys = ['architect', 'developer', 'reviewer', 'qatest'];
+  keys.forEach(k => updateAgentUI(k, 'idle'));
+  document.getElementById('progressBar').style.width = '0%';
+}
+
+function resetBtn() {
+  document.getElementById('btnGenerate').disabled = false;
+  document.getElementById('btnGenerate').textContent = '⚡ Generate Now';
+}
+
+// ─── Health Check on Load ───────────────────────────
+(async function checkHealth() {
+  try {
+    const resp = await fetch('/api/health');
+    const data = await resp.json();
+    console.log('Server connected:', data);
+    if (data.agents) {
+      Object.entries(data.agents).forEach(([name, online]) => {
+        const badge = document.querySelector(`.badge.dot.${name === 'qatest' ? '' : ''}`);
+      });
+    }
+  } catch (e) {
+    console.warn('Server not reachable. Start with: python server.py');
+  }
+})();
+</script>
+</body>
+</html>

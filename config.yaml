@@ -1,0 +1,18 @@
+# Band Agent Configuration
+# For use with thenvoi.config.load_agent_config()
+
+architect:
+  agent_id: "a3e02ba9-4996-4042-b2a1-c80f109e933e"
+  api_key: "band_a_1781240738_X43X_Q4JZK1YwSMf1UHi1WYvh_mcNEqi"
+
+developer:
+  agent_id: "577f5106-3724-4b31-800b-c7ddc78c6769"
+  api_key: "band_a_178124073_9JX98jNw9MmmvMEfbjEzdeAeVFtFpI-"
+
+reviewer:
+  agent_id: "8ee009db-93e5-42cf-978f-cfd1db09fc80"
+  api_key: "band_a_1781241191_m2uc7f1ovtZ90KpV0lV6fl0AnXcoS_uy"
+
+qatest:
+  agent_id: "11343e94-73b2-44a2-a5fe-76a080c1a761"
+  api_key: "band_a_1781241325_64QQLP8iVPYQTt8FogGzLLYwcQ6xnJ00"
